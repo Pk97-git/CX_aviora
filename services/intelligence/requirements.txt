@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+redis
+sqlalchemy
+asyncpg>=0.29.0
+groq
+pydantic
+pydantic-settings
+python-dotenv
+tenacity
