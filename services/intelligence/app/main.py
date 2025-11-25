@@ -1,25 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import logging
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("Intelligence Service starting up...")
-    
-    # Start Redis Consumer in background
-    import asyncio
-    from app.consumers.redis_consumer import redis_consumer
-    
-    task = asyncio.create_task(redis_consumer.start())
-    
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-import logging
-from app.core.config import settings # Added this import
+from app.core.config import get_settings
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -50,8 +32,8 @@ async def health_check():
 # Debug Endpoint
 @app.get("/debug")
 async def debug_status():
+    settings = get_settings()
     redis_status = "unknown"
-    consumer_status = "unknown"
     
     # Check Redis
     try:
@@ -62,11 +44,6 @@ async def debug_status():
             redis_status = "failed"
     except Exception as e:
         redis_status = f"error: {str(e)}"
-
-    # Check Consumer
-    # We can't easily check the specific task object here without storing it globally, 
-    # but we can check if the loop is running.
-    # For now, let's just return the redis status which is the most likely failure point.
     
     return {
         "status": "debug",
