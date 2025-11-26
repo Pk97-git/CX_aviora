@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 from app.core.config import get_settings
@@ -23,11 +24,39 @@ async def lifespan(app: FastAPI):
     await redis_consumer.stop()
     await task
 
-app = FastAPI(title="Aivora Intelligence Service", lifespan=lifespan)
+app = FastAPI(
+    title="Aivora Intelligence Service",
+    description="AI-powered customer support intelligence and analytics",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS Configuration
+settings = get_settings()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Vite dev server
+        "http://localhost:5173",  # Alternative Vite port
+        "https://*.render.com",   # Render deployments
+        "https://cx-aviora-fecaitvzg-prashanths-projects-626ff807.vercel.app",  # Vercel production
+        "https://*.vercel.app",   # All Vercel preview deployments
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register API Routers
+from app.api.routes import tickets, analytics, strategy
+
+app.include_router(tickets.router, prefix="/api/tickets", tags=["Tickets"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+app.include_router(strategy.router, prefix="/api/strategy", tags=["Strategy"])
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "intelligence"}
+    return {"status": "ok", "service": "intelligence", "version": "1.0.0"}
 
 # Debug Endpoint
 @app.get("/debug")

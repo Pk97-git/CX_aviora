@@ -17,6 +17,22 @@
 - **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - **Instance Type**: Free
+
+## 3. Environment Variables
+
+Copy these values from your local `.env` or the list below:
+
+| Key              | Value                                                   |
+| ---------------- | ------------------------------------------------------- |
+| `DATABASE_URL`   | `<your-neon-database-url>` (Get from Neon dashboard)    |
+| `REDIS_URL`      | `<your-upstash-redis-url>` (Get from Upstash dashboard) |
+| `GROQ_API_KEY`   | `<your-groq-api-key>` (Get from Groq console)           |
+| `PYTHON_VERSION` | `3.11.9`                                                |
+
+## 4. Deploy
+
+- Click **Create Web Service**.
+- Wait for the build to finish.
 - Once live, you will get a URL like `https://aivora-intelligence-service.onrender.com`.
 
 ## 5. Verification
