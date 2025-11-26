@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "env": {
+    "VITE_API_BASE_URL": "https://aivora-intelligence.onrender.com",
+    "VITE_WS_URL": "wss://aivora-intelligence.onrender.com/ws"
+  }
+}
