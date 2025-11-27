@@ -21,9 +21,13 @@ import {
   Download,
   Calendar
 } from "lucide-react"
+import { 
+  useRCA, 
+  useSentimentTrend 
+} from "@/hooks/useAnalytics"
 
 // Mock Data
-const rcaData = [
+const mockRcaData = [
   { name: 'Payment Failure', count: 145, cost: 4500 },
   { name: 'Login Issue', count: 89, cost: 2100 },
   { name: 'Shipping Delay', count: 67, cost: 1800 },
@@ -31,7 +35,7 @@ const rcaData = [
   { name: 'Refund Status', count: 34, cost: 800 },
 ]
 
-const sentimentData = [
+const mockSentimentData = [
   { date: 'Mon', score: 78 },
   { date: 'Tue', score: 82 },
   { date: 'Wed', score: 75 },
@@ -59,6 +63,14 @@ const agentPerformance = [
 ]
 
 export default function Insights() {
+  // Fetch real data from API
+  const { data: apiRcaData } = useRCA()
+  const { data: apiSentimentData } = useSentimentTrend()
+
+  // Use API data if available, otherwise fall back to mock data
+  const rcaData = apiRcaData || mockRcaData
+  const sentimentData = apiSentimentData || mockSentimentData
+
   return (
     <div className="space-y-6">
       {/* Header */}

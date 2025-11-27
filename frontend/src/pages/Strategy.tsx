@@ -27,9 +27,14 @@ import {
   DollarSign,
   Calendar
 } from "lucide-react"
+import { 
+  useTopicClusters, 
+  useRegionalIntelligence, 
+  useStrategicRecommendations 
+} from "@/hooks/useStrategy"
 
 // Mock Data for Topic Clusters
-const topicClusters = [
+const mockTopicClusters = [
   { topic: 'Shipping Delay', volume: 450, sentiment: 25, impact: 'High' },
   { topic: 'Login Error', volume: 320, sentiment: 15, impact: 'Critical' },
   { topic: 'Sizing Issue', volume: 210, sentiment: 60, impact: 'Medium' },
@@ -39,14 +44,14 @@ const topicClusters = [
 ]
 
 // Mock Data for Regional Intelligence
-const regionalData = [
+const mockRegionalData = [
   { region: 'North America', volume: 1200, sentiment: 78, frictionCost: 4500 },
   { region: 'Europe', volume: 850, sentiment: 65, frictionCost: 3200 },
   { region: 'Asia Pacific', volume: 600, sentiment: 82, frictionCost: 1800 },
   { region: 'LATAM', volume: 300, sentiment: 70, frictionCost: 900 },
 ]
 
-const recommendations = [
+const mockRecommendations = [
   {
     id: 1,
     type: 'Logistics',
@@ -109,6 +114,16 @@ const forecastData = [
 ]
 
 export default function Strategy() {
+  // Fetch real data from API
+  const { data: apiTopicClusters, isLoading: loadingTopics } = useTopicClusters()
+  const { data: apiRegionalData, isLoading: loadingRegional } = useRegionalIntelligence()
+  const { data: apiRecommendations, isLoading: loadingRecs } = useStrategicRecommendations()
+
+  // Use API data if available, otherwise fall back to mock data
+  const topicClusters = apiTopicClusters || mockTopicClusters
+  const regionalData = apiRegionalData || mockRegionalData
+  const recommendations = apiRecommendations || mockRecommendations
+
   return (
     <div className="space-y-8">
       {/* Header */}
