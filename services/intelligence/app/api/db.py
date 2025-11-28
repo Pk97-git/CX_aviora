@@ -58,23 +58,25 @@ async def get_tickets_with_analysis(
     result = await db.execute(query)
     rows = result.all()
     
-    # Format results
+    # Format results - MAP DB FIELDS TO FRONTEND EXPECTATIONS + Convert UUIDs to strings
     tickets = []
     for ticket, analysis in rows:
+        # MAP DB FIELDS TO FRONTEND EXPECTATIONS + Convert UUIDs to strings
         ticket_dict = {
-            "id": ticket.id,
-            "subject": ticket.subject,
-            "description": ticket.description,
+            "id": str(ticket.id),  # UUID -> str
+            "subject": ticket.title,  # DB: title -> Frontend: subject
+            "description": ticket.description or "",
             "status": ticket.status,
             "priority": ticket.priority,
-            "source": ticket.source,
-            "customer_id": ticket.customer_id,
-            "customer_email": ticket.customer_email,
-            "assignee": ticket.assignee,
+            "source": ticket.external_source or "",  # DB: external_source -> Frontend: source
+            "customer_id": str(ticket.customer_id) if ticket.customer_id else None,  # UUID -> str
+            "customer_email": ticket.customer_email or "",
+            "customer_name": ticket.customer_name or "",
+            "assignee": str(ticket.assigned_to) if ticket.assigned_to else None,  # DB: assigned_to -> Frontend: assignee, UUID -> str
             "created_at": ticket.created_at,
             "updated_at": ticket.updated_at,
             "resolved_at": ticket.resolved_at,
-            "sla_breach_at": ticket.sla_breach_at,
+            "sla_breach_at": ticket.sla_due_at,  # DB: sla_due_at -> Frontend: sla_breach_at
         }
         
         if analysis:
@@ -110,7 +112,7 @@ async def get_dashboard_kpis(db: AsyncSession) -> Dict[str, Any]:
     sla_risk_query = select(func.count()).select_from(Ticket).where(
         and_(
             Ticket.priority.in_(['urgent', 'critical']),
-            Ticket.sla_breach_at < datetime.utcnow() + timedelta(hours=2),
+            Ticket.sla_due_at < datetime.utcnow() + timedelta(hours=2),
             Ticket.status.in_(['open', 'in_progress'])
         )
     )

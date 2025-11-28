@@ -39,20 +39,6 @@ class TicketResponse(BaseModel):
     status: TicketStatus
     priority: TicketPriority
     source: str
-    customer_id: Optional[str] = None
-    customer_email: Optional[str] = None
-    assignee: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-    resolved_at: Optional[datetime] = None
-    sla_breach_at: Optional[datetime] = None
-    
-    # AI Analysis (if available)
-    ai_analysis: Optional[AIAnalysisResponse] = None
-    
-    class Config:
-        from_attributes = True
-
 
 class TicketListResponse(BaseModel):
     tickets: List[TicketResponse]

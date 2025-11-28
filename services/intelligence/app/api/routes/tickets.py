@@ -79,28 +79,26 @@ async def get_ticket(
         AIAnalysis, Ticket.id == AIAnalysis.ticket_id
     ).where(Ticket.id == ticket_id)
     
-    result = await db.execute(query)
-    row = result.first()
-    
     if not row:
         raise HTTPException(status_code=404, detail="Ticket not found")
     
     ticket, analysis = row
     
+    # MAP DB FIELDS TO FRONTEND EXPECTATIONS
     ticket_dict = {
         "id": ticket.id,
-        "subject": ticket.subject,
+        "subject": ticket.title,  # DB: title -> Frontend: subject
         "description": ticket.description,
         "status": ticket.status,
         "priority": ticket.priority,
-        "source": ticket.source,
+        "source": ticket.external_source,  # DB: external_source -> Frontend: source
         "customer_id": ticket.customer_id,
         "customer_email": ticket.customer_email,
-        "assignee": ticket.assignee,
+        "assignee": ticket.assigned_to,  # DB: assigned_to -> Frontend: assignee
         "created_at": ticket.created_at,
         "updated_at": ticket.updated_at,
         "resolved_at": ticket.resolved_at,
-        "sla_breach_at": ticket.sla_breach_at,
+        "sla_breach_at": ticket.sla_due_at,  # DB: sla_due_at -> Frontend: sla_breach_at
     }
     
     if analysis:
