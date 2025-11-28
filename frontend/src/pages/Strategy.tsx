@@ -115,9 +115,9 @@ const forecastData = [
 
 export default function Strategy() {
   // Fetch real data from API
-  const { data: apiTopicClusters, isLoading: loadingTopics } = useTopicClusters()
-  const { data: apiRegionalData, isLoading: loadingRegional } = useRegionalIntelligence()
-  const { data: apiRecommendations, isLoading: loadingRecs } = useStrategicRecommendations()
+  const { data: apiTopicClusters } = useTopicClusters()
+  const { data: apiRegionalData } = useRegionalIntelligence()
+  const { data: apiRecommendations } = useStrategicRecommendations()
 
   // Use API data if available, otherwise fall back to mock data
   const topicClusters = apiTopicClusters || mockTopicClusters
