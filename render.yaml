@@ -1,16 +1,48 @@
+# Render Blueprint for Aivora Platform
+# This file defines all services to be deployed on Render
+
 services:
+  # Intelligence Service (Python/FastAPI)
   - type: web
-    name: aivora-intelligence-service
-    env: python
+    name: aivora-intelligence
+    runtime: python
+    region: singapore
+    plan: free
+    branch: main
     rootDir: services/intelligence
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        sync: false
+        sync: false # Set manually in Render dashboard
       - key: REDIS_URL
-        sync: false
+        sync: false # Set manually in Render dashboard
       - key: GROQ_API_KEY
-        sync: false
+        sync: false # Set manually in Render dashboard
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: 3.11.0
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Ingestion Service (Go/Gin)
+  - type: web
+    name: aivora-ingestion
+    runtime: docker
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: services/ingestion
+    dockerfilePath: services/ingestion/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard
+      - key: REDIS_URL
+        sync: false # Set manually in Render dashboard
+      - key: PORT
+        value: 8080
+      - key: CIRCUIT_BREAKER_THRESHOLD
+        value: 5
+      - key: CIRCUIT_BREAKER_TIMEOUT
+        value: 30
+    healthCheckPath: /health
+    autoDeploy: true
