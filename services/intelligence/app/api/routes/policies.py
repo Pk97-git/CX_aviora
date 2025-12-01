@@ -23,7 +23,7 @@ class PolicyStats(BaseModel):
     avg_compliance: float
     total_violations: int
 
-@router.get("/policies", response_model=List[Policy])
+@router.get("/", response_model=List[Policy])
 async def get_policies(db: AsyncSession = Depends(get_db)):
     """Get all governance policies"""
     result = await db.execute(select(PolicyModel))
