@@ -39,7 +39,8 @@ app.add_middleware(
         "http://localhost:3000",  # Vite dev server
         "http://localhost:5173",  # Alternative Vite port
         "https://*.render.com",   # Render deployments
-        "https://cx-aviora-fecaitvzg-prashanths-projects-626ff807.vercel.app",  # Vercel production
+        "https://cx-aviora.vercel.app",  # Vercel production (new URL)
+        "https://cx-aviora-fecaitvzg-prashanths-projects-626ff807.vercel.app",  # Vercel production (old URL)
         "https://*.vercel.app",   # All Vercel preview deployments
     ],
     allow_credentials=True,
