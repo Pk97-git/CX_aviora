@@ -21,12 +21,12 @@ export interface WorkflowStats {
 
 export const workflowsApi = {
   getWorkflows: async (): Promise<Workflow[]> => {
-    const { data } = await apiClient.get('/api/workflows/workflows')
+    const { data } = await apiClient.get('/api/workflows')
     return data
   },
 
   getStats: async (): Promise<WorkflowStats> => {
-    const { data } = await apiClient.get('/api/workflows/workflows/stats')
+    const { data } = await apiClient.get('/api/workflows/stats')
     return data
   },
 }

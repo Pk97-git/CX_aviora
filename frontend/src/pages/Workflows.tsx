@@ -1,39 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Workflow, Plus, Play, Pause, MoreHorizontal, Zap, Clock, CheckCircle2 } from "lucide-react"
-
-const workflows = [
-  {
-    id: 1,
-    name: "High Value Refund Approval",
-    trigger: "Ticket Created > $500",
-    actions: ["Check LTV", "Route to Manager", "Slack Alert"],
-    status: "active",
-    runs: 145,
-    saved: "24h",
-  },
-  {
-    id: 2,
-    name: "Auto-Reply: Shipping Delays",
-    trigger: "Intent = 'Shipping Status'",
-    actions: ["Check Order Status", "Send Email"],
-    status: "active",
-    runs: 1250,
-    saved: "180h",
-  },
-  {
-    id: 3,
-    name: "VIP Escalation",
-    trigger: "Customer Tag = 'VIP'",
-    actions: ["Set Priority = Urgent", "Assign to Senior Team"],
-    status: "paused",
-    runs: 45,
-    saved: "5h",
-  },
-]
+import { Workflow, Plus, Play, Pause, MoreHorizontal, Zap, Clock, CheckCircle2, Loader2 } from "lucide-react"
+import { useWorkflows, useWorkflowStats } from "@/hooks/useWorkflows"
 
 export default function Workflows() {
+  const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflows()
+  const { data: stats, isLoading: isLoadingStats } = useWorkflowStats()
+
+  if (isLoadingWorkflows || isLoadingStats) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -52,13 +34,15 @@ export default function Workflows() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4 text-violet-600" />
-              Time Saved (This Month)
+              Time Saved (Total)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-violet-700 dark:text-violet-400">209 Hours</div>
+            <div className="text-3xl font-bold text-violet-700 dark:text-violet-400">
+              {stats?.time_saved_hours.toLocaleString() ?? 0} Hours
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Equivalent to 1.5 full-time agents
+              Across {stats?.total_executions.toLocaleString() ?? 0} executions
             </p>
           </CardContent>
         </Card>
@@ -71,9 +55,9 @@ export default function Workflows() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">12</div>
+            <div className="text-3xl font-bold">{stats?.active_workflows ?? 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Handling 45% of total ticket volume
+              Out of {stats?.total_workflows ?? 0} total workflows
             </p>
           </CardContent>
         </Card>
@@ -86,9 +70,11 @@ export default function Workflows() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-700">99.8%</div>
+            <div className="text-3xl font-bold text-green-700">
+              {(stats?.avg_success_rate ? stats.avg_success_rate * 100 : 0).toFixed(1)}%
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Only 3 failures requiring manual intervention
+              Average across all runs
             </p>
           </CardContent>
         </Card>
@@ -96,7 +82,7 @@ export default function Workflows() {
 
       {/* Workflow List */}
       <div className="grid gap-4">
-        {workflows.map((workflow) => (
+        {workflows?.map((workflow) => (
           <Card key={workflow.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6 flex items-center justify-between">
               <div className="flex items-start gap-4">
@@ -122,8 +108,8 @@ export default function Workflows() {
 
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <p className="text-sm font-medium">{workflow.runs} Runs</p>
-                  <p className="text-xs text-green-600">Saved {workflow.saved}</p>
+                  <p className="text-sm font-medium">{workflow.executions.toLocaleString()} Runs</p>
+                  <p className="text-xs text-green-600">Saved {workflow.time_saved_hours}h</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="icon">

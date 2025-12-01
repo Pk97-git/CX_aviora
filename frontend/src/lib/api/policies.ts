@@ -20,12 +20,12 @@ export interface PolicyStats {
 
 export const policiesApi = {
   getPolicies: async (): Promise<Policy[]> => {
-    const { data } = await apiClient.get('/api/policies/policies')
+    const { data } = await apiClient.get('/api/policies')
     return data
   },
 
   getStats: async (): Promise<PolicyStats> => {
-    const { data } = await apiClient.get('/api/policies/policies/stats')
+    const { data } = await apiClient.get('/api/policies/stats')
     return data
   },
 }
