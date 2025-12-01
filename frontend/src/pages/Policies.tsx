@@ -1,36 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Shield, FileText, Check, History } from "lucide-react"
-
-const policies = [
-  {
-    id: 1,
-    name: "Refund Thresholds",
-    description: "Auto-approve refunds under $50. Require manager approval for >$500.",
-    status: "active",
-    compliance: "100%",
-    lastUpdated: "2 days ago"
-  },
-  {
-    id: 2,
-    name: "PII Redaction",
-    description: "Automatically redact credit card numbers and SSNs from chat logs.",
-    status: "active",
-    compliance: "99.9%",
-    lastUpdated: "1 week ago"
-  },
-  {
-    id: 3,
-    name: "Tone & Brand Voice",
-    description: "Ensure agent replies match the 'Empathetic & Professional' persona.",
-    status: "monitoring",
-    compliance: "85%",
-    lastUpdated: "3 days ago"
-  },
-]
+import { Shield, FileText, Check, History, Loader2, Plus } from "lucide-react"
+import { usePolicies, usePolicyStats } from "@/hooks/usePolicies"
 
 export default function Policies() {
+  const { data: policies, isLoading: isLoadingPolicies } = usePolicies()
+  const { data: stats, isLoading: isLoadingStats } = usePolicyStats()
+
+  if (isLoadingPolicies || isLoadingStats) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -57,7 +42,9 @@ export default function Policies() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">98.5%</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {stats?.avg_compliance ? stats.avg_compliance.toFixed(1) : 0}%
+              </p>
               <p className="text-xs text-muted-foreground">Overall Score</p>
             </div>
           </div>
@@ -66,7 +53,7 @@ export default function Policies() {
 
       {/* Policy Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {policies.map((policy) => (
+        {policies?.map((policy) => (
           <Card key={policy.id} className="flex flex-col">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -86,19 +73,19 @@ export default function Policies() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Compliance</span>
-                  <span className={`font-medium ${parseInt(policy.compliance) < 90 ? 'text-amber-600' : 'text-green-600'}`}>
-                    {policy.compliance}
+                  <span className={`font-medium ${policy.compliance_score < 90 ? 'text-amber-600' : 'text-green-600'}`}>
+                    {policy.compliance_score}%
                   </span>
                 </div>
                 <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full rounded-full ${parseInt(policy.compliance) < 90 ? 'bg-amber-500' : 'bg-green-500'}`} 
-                    style={{ width: policy.compliance }}
+                    className={`h-full rounded-full ${policy.compliance_score < 90 ? 'bg-amber-500' : 'bg-green-500'}`} 
+                    style={{ width: `${policy.compliance_score}%` }}
                   ></div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
                   <History className="h-3 w-3" />
-                  Updated {policy.lastUpdated}
+                  Updated {policy.last_updated}
                 </div>
               </div>
             </CardContent>
