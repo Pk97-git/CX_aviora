@@ -25,7 +25,7 @@ class WorkflowStats(BaseModel):
     time_saved_hours: float
     avg_success_rate: float
 
-@router.get("/workflows", response_model=List[Workflow])
+@router.get("/", response_model=List[Workflow])
 async def get_workflows(db: AsyncSession = Depends(get_db)):
     """Get all automation workflows"""
     result = await db.execute(select(WorkflowModel))
