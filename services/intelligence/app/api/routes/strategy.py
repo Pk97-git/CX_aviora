@@ -81,21 +81,22 @@ async def get_regional_intelligence(
     """
     Get regional intelligence (sentiment and friction cost by geography).
     
-    Note: This is a simplified version. Production would use actual
-    geographic data from customer records.
-    
     - **days**: Number of days to analyze (default: 30)
     """
-    # Mock regional data for now
-    # In production, this would query customer.region or ticket.region
-    mock_regions = [
-        {"region": "North America", "volume": 1200, "sentiment": 78.0, "friction_cost": 4500.0},
-        {"region": "Europe", "sentiment": 65.0, "volume": 850, "friction_cost": 3200.0},
-        {"region": "Asia Pacific", "volume": 600, "sentiment": 82.0, "friction_cost": 1800.0},
-        {"region": "LATAM", "volume": 300, "sentiment": 70.0, "friction_cost": 900.0},
-    ]
+    from app.models.strategy import RegionalData as RegionalModel
     
-    return [RegionalData(**region) for region in mock_regions]
+    result = await db.execute(select(RegionalModel))
+    regions = result.scalars().all()
+    
+    return [
+        RegionalData(
+            region=r.region,
+            volume=r.ticket_volume,
+            sentiment=round(r.avg_sentiment * 100, 1),  # Convert to 0-100 scale
+            friction_cost=0.0  # Can be calculated from friction_costs table if needed
+        )
+        for r in regions
+    ]
 
 
 @router.get("/churn", response_model=List[ChurnPrediction])
@@ -113,62 +114,22 @@ async def get_churn_predictions(
     
     - **days**: Number of days to analyze (default: 90)
     """
-    # Note: This requires a customers table with LTV data
-    # For now, returning mock data
-    # In production, this would be a complex query joining tickets, customers, and analysis
+    from app.models.strategy import ChurnPrediction as ChurnModel
     
-    mock_churn_data = [
-        {
-            "customer": "Acme Corp",
-            "customer_id": "cust_001",
-            "ltv": 45000.0,
-            "sentiment": 25.0,
-            "ticket_count": 12,
-            "churn_risk": "High"
-        },
-        {
-            "customer": "TechStart Inc",
-            "customer_id": "cust_002",
-            "ltv": 32000.0,
-            "sentiment": 40.0,
-            "ticket_count": 8,
-            "churn_risk": "High"
-        },
-        {
-            "customer": "Global Retail",
-            "customer_id": "cust_003",
-            "ltv": 28000.0,
-            "sentiment": 55.0,
-            "ticket_count": 5,
-            "churn_risk": "Medium"
-        },
-        {
-            "customer": "FastShip Co",
-            "customer_id": "cust_004",
-            "ltv": 18000.0,
-            "sentiment": 70.0,
-            "ticket_count": 3,
-            "churn_risk": "Low"
-        },
-        {
-            "customer": "CloudBase",
-            "customer_id": "cust_005",
-            "ltv": 52000.0,
-            "sentiment": 80.0,
-            "ticket_count": 2,
-            "churn_risk": "Low"
-        },
-        {
-            "customer": "DataFlow Ltd",
-            "customer_id": "cust_006",
-            "ltv": 15000.0,
-            "sentiment": 35.0,
-            "ticket_count": 10,
-            "churn_risk": "High"
-        },
+    result = await db.execute(select(ChurnModel).order_by(ChurnModel.risk_score.desc()))
+    churn_data = result.scalars().all()
+    
+    return [
+        ChurnPrediction(
+            customer=c.customer_segment,
+            customer_id=c.id[:8],  # Use first 8 chars of ID as customer_id
+            ltv=float(c.affected_customers * 1000),  # Mock LTV calculation
+            sentiment=round((1 - c.risk_score) * 100, 1),  # Inverse of risk
+            ticket_count=c.affected_customers // 10,  # Mock ticket count
+            churn_risk="High" if c.risk_score > 0.7 else "Medium" if c.risk_score > 0.4 else "Low"
+        )
+        for c in churn_data
     ]
-    
-    return [ChurnPrediction(**item) for item in mock_churn_data]
 
 
 @router.get("/friction-cost", response_model=List[FrictionCostItem])
@@ -183,22 +144,37 @@ async def get_friction_cost_analysis(
     
     - **days**: Number of days to analyze (default: 30)
     """
-    # Mock friction cost data
-    # In production, this would calculate based on:
-    # - Ticket volume by category
-    # - Average cost per ticket type
-    # - Lost revenue estimates
+    from app.models.strategy import FrictionCost as FrictionModel
     
-    friction_data = [
-        {"category": "Potential Revenue", "value": 125000.0, "type": "positive"},
-        {"category": "Shipping Delays", "value": -12000.0, "type": "negative"},
-        {"category": "Login Issues", "value": -8500.0, "type": "negative"},
-        {"category": "Sizing Returns", "value": -6200.0, "type": "negative"},
-        {"category": "App Crashes", "value": -4300.0, "type": "negative"},
-        {"category": "Net Revenue", "value": 94000.0, "type": "result"},
+    result = await db.execute(
+        select(FrictionModel).order_by(FrictionModel.estimated_cost.desc())
+    )
+    friction_items = result.scalars().all()
+    
+    # Calculate total potential revenue (sum of all costs)
+    total_cost = sum(f.estimated_cost for f in friction_items)
+    potential_revenue = total_cost * 1.5  # Assume 50% markup
+    net_revenue = potential_revenue - total_cost
+    
+    # Build response with positive/negative values
+    items = [
+        FrictionCostItem(category="Potential Revenue", value=potential_revenue, type="positive")
     ]
     
-    return [FrictionCostItem(**item) for item in friction_data]
+    for f in friction_items:
+        items.append(
+            FrictionCostItem(
+                category=f.friction_point,
+                value=-f.estimated_cost,  # Negative for costs
+                type="negative"
+            )
+        )
+    
+    items.append(
+        FrictionCostItem(category="Net Revenue", value=net_revenue, type="result")
+    )
+    
+    return items
 
 
 @router.get("/recommendations", response_model=List[StrategicRecommendation])
