@@ -45,7 +45,7 @@ async def get_workflows(db: AsyncSession = Depends(get_db)):
         for w in workflows
     ]
 
-@router.get("/workflows/stats", response_model=WorkflowStats)
+@router.get("/stats", response_model=WorkflowStats)
 async def get_workflow_stats(db: AsyncSession = Depends(get_db)):
     """Get workflow statistics"""
     # Get total count
