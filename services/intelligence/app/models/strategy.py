@@ -62,3 +62,17 @@ class FrictionCost(Base):
     resolution_difficulty = Column(String)  # easy, medium, hard
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class StrategicRecommendation(Base):
+    """AI-generated strategic recommendations"""
+    __tablename__ = "strategic_recommendations"
+
+    id = Column(String, primary_key=True)  # UUID
+    type = Column(String, nullable=False)  # Logistics, Product, Policy, etc.
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    impact = Column(String, nullable=False)  # High, Critical, Medium, Low
+    confidence = Column(String, nullable=False)  # e.g. "94%"
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
