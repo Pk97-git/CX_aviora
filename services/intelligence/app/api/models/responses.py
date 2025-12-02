@@ -105,7 +105,9 @@ class VolumeDataPoint(BaseModel):
 
 class SentimentTrendPoint(BaseModel):
     date: str
-    score: float
+    positive: int
+    neutral: int
+    negative: int
 
 
 class RCAItem(BaseModel):
