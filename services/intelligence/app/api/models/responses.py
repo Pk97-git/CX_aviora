@@ -87,7 +87,7 @@ class FrictionCostItem(BaseModel):
 
 
 class StrategicRecommendation(BaseModel):
-    id: int
+    id: str
     type: str  # "Logistics", "Product", "Policy"
     title: str
     description: str
