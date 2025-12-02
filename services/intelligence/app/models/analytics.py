@@ -11,11 +11,12 @@ class RCAMetric(Base):
     __tablename__ = "rca_metrics"
 
     id = Column(String, primary_key=True)  # UUID
-    issue_name = Column(String, nullable=False)
-    date = Column(Date, nullable=False)
+    category = Column(String, nullable=False)  # e.g., "Shipping Delays"
     ticket_count = Column(Integer, default=0)
-    estimated_cost = Column(Float, default=0.0)
+    avg_resolution_hours = Column(Float, default=0.0)
+    severity = Column(String, nullable=False)  # "high", "medium", "low"
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class SentimentMetric(Base):
@@ -24,11 +25,11 @@ class SentimentMetric(Base):
 
     id = Column(String, primary_key=True)  # UUID
     date = Column(Date, nullable=False, unique=True)
-    average_score = Column(Float)  # 0.0 to 100.0
-    positive_count = Column(Integer, default=0)
-    negative_count = Column(Integer, default=0)
-    neutral_count = Column(Integer, default=0)
+    positive = Column(Integer, default=0)
+    neutral = Column(Integer, default=0)
+    negative = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class VolumeForecast(Base):
@@ -37,10 +38,12 @@ class VolumeForecast(Base):
 
     id = Column(String, primary_key=True)  # UUID
     date = Column(Date, nullable=False, unique=True)
-    actual_volume = Column(Integer)  # NULL for future dates
-    predicted_volume = Column(Integer, nullable=False)
-    confidence_score = Column(Float)  # 0.0 to 1.0
+    actual = Column(Integer, nullable=True)  # NULL for future dates
+    predicted = Column(Integer, nullable=False)
+    lower_bound = Column(Integer, nullable=False)
+    upper_bound = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class AgentPerformance(Base):
