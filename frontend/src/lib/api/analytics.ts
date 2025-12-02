@@ -17,7 +17,9 @@ export interface RCAItem {
 
 export interface SentimentTrendPoint {
   date: string
-  score: number
+  positive: number
+  neutral: number
+  negative: number
 }
 
 export interface VolumeDataPoint {

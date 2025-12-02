@@ -7,6 +7,7 @@ import Workflows from '@/pages/Workflows'
 import Policies from '@/pages/Policies'
 import Insights from '@/pages/Insights'
 import Strategy from '@/pages/Strategy'
+import Financial from '@/pages/Financial'
 import Settings from '@/pages/Settings'
 
 export const router = createBrowserRouter([
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
       {
         path: 'insights',
         element: <Insights />,
+      },
+      {
+        path: 'financial',
+        element: <Financial />,
       },
       {
         path: 'strategy',
