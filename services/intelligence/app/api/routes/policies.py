@@ -42,7 +42,7 @@ async def get_policies(db: AsyncSession = Depends(get_db)):
         for p in policies
     ]
 
-@router.get("/policies/stats", response_model=PolicyStats)
+@router.get("/stats", response_model=PolicyStats)
 async def get_policy_stats(db: AsyncSession = Depends(get_db)):
     """Get policy compliance statistics"""
     # Get total count
