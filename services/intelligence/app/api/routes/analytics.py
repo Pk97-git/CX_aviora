@@ -48,8 +48,22 @@ async def get_root_cause_analysis(
     
     - **days**: Number of days to analyze (default: 30, max: 90)
     """
-    rca_data = await get_rca_data(db, days=days)
-    return [RCAItem(**item) for item in rca_data]
+    from app.models.analytics import RCAMetric
+    from sqlalchemy import select
+    
+    result = await db.execute(
+        select(RCAMetric).order_by(RCAMetric.ticket_count.desc()).limit(10)
+    )
+    metrics = result.scalars().all()
+    
+    return [
+        RCAItem(
+            name=m.category,
+            count=m.ticket_count,
+            cost=int(m.avg_resolution_hours * m.ticket_count * 50)  # $50/hour estimate
+        )
+        for m in metrics
+    ]
 
 
 @router.get("/sentiment", response_model=List[SentimentTrendPoint])
@@ -63,8 +77,28 @@ async def get_sentiment_analysis(
     
     - **days**: Number of days to analyze (default: 7, max: 30)
     """
-    sentiment_data = await get_sentiment_trend(db, days=days)
-    return [SentimentTrendPoint(**item) for item in sentiment_data]
+    from app.models.analytics import SentimentMetric
+    from sqlalchemy import select
+    from datetime import datetime, timedelta
+    
+    start_date = datetime.utcnow().date() - timedelta(days=days)
+    
+    result = await db.execute(
+        select(SentimentMetric)
+        .where(SentimentMetric.date >= start_date)
+        .order_by(SentimentMetric.date)
+    )
+    metrics = result.scalars().all()
+    
+    return [
+        SentimentTrendPoint(
+            date=m.date.strftime('%a'),
+            positive=m.positive,
+            neutral=m.neutral,
+            negative=m.negative
+        )
+        for m in metrics
+    ]
 
 
 @router.get("/volume-forecast", response_model=List[VolumeDataPoint])
@@ -79,45 +113,29 @@ async def get_volume_forecast(
     
     Note: This is a simplified forecast. Production would use time-series ML models.
     """
+    from app.models.analytics import VolumeForecast
+    from sqlalchemy import select
     from datetime import datetime, timedelta
-    from app.models.database import Ticket
-    from sqlalchemy import select, func
     
-    # Get historical average for baseline
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    start_date = datetime.utcnow().date()
+    end_date = start_date + timedelta(days=days)
     
-    query = select(
-        func.count(Ticket.id)
-    ).where(
-        Ticket.created_at >= seven_days_ago
+    result = await db.execute(
+        select(VolumeForecast)
+        .where(VolumeForecast.date >= start_date)
+        .where(VolumeForecast.date < end_date)
+        .order_by(VolumeForecast.date)
+        .limit(days)
     )
+    forecasts = result.scalars().all()
     
-    result = await db.execute(query)
-    total_7d = result.scalar() or 0
-    avg_daily = total_7d / 7
-    
-    # Generate forecast (simplified linear projection with noise)
-    forecast = []
-    for i in range(days):
-        day_offset = i + 1
-        date_str = f"Day {day_offset}"
-        
-        # Simple forecast with slight growth trend
-        predicted = int(avg_daily * (1 + (day_offset * 0.01)))
-        
-        # Confidence intervals (±20%)
-        lower = int(predicted * 0.8)
-        upper = int(predicted * 1.2)
-        
-        # Only include actual data for past days (mock)
-        actual = int(avg_daily) if i < 5 else None
-        
-        forecast.append(VolumeDataPoint(
-            date=date_str,
-            actual=actual,
-            predicted=predicted,
-            lower_bound=lower,
-            upper_bound=upper
-        ))
-    
-    return forecast
+    return [
+        VolumeDataPoint(
+            date=f.date.strftime('%b %d'),
+            actual=f.actual,
+            predicted=f.predicted,
+            lower_bound=f.lower_bound,
+            upper_bound=f.upper_bound
+        )
+        for f in forecasts
+    ]
