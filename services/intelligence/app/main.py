@@ -49,7 +49,7 @@ app.add_middleware(
 )
 
 # Register API Routers
-from app.api.routes import tickets, analytics, strategy, workflows, policies, admin, financial
+from app.api.routes import tickets, analytics, strategy, workflows, policies, admin, financial, alerts
 
 app.include_router(tickets.router, prefix="/api/tickets", tags=["Tickets"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
@@ -57,6 +57,7 @@ app.include_router(strategy.router, prefix="/api/strategy", tags=["Strategy"])
 app.include_router(workflows.router, prefix="/api/workflows", tags=["Workflows"])
 app.include_router(policies.router, prefix="/api/policies", tags=["Policies"])
 app.include_router(financial.router, prefix="/api/financial", tags=["Financial"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
 app.include_router(admin.router, tags=["Admin"])
 
 @app.get("/health")
