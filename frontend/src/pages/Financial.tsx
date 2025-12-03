@@ -150,7 +150,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {trends && trends.length > 0 ? (
+              {trends ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trends}>
                   <defs>
@@ -195,7 +195,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {breakdown?.categories && breakdown.categories.length > 0 ? (
+              {breakdown?.categories ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                   <Pie
