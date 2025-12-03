@@ -96,10 +96,10 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {roi?.roi_percentage.toFixed(1)}%
+              {(roi?.roi_percentage || 0).toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Payback: {roi?.payback_period_months.toFixed(1)} months
+              Payback: {(roi?.payback_period_months || 0).toFixed(1)} months
             </p>
           </CardContent>
         </Card>
@@ -143,7 +143,7 @@ export default function Financial() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trends}>
+                <AreaChart data={trends || []}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
@@ -184,7 +184,7 @@ export default function Financial() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={breakdown as any}
+                    data={breakdown?.categories || []}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -193,7 +193,7 @@ export default function Financial() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {breakdown?.map((_entry, index) => (
+                    {(breakdown?.categories || []).map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
