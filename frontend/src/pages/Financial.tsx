@@ -150,8 +150,9 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trends || []}>
+              {trends && trends.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trends}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
@@ -176,8 +177,13 @@ export default function Financial() {
                     fill="url(#colorValue)" 
                     name="Total Value"
                   />
-                </AreaChart>
-              </ResponsiveContainer>
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  Loading trend data...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -189,8 +195,9 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+              {breakdown?.categories && breakdown.categories.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
                   <Pie
                     data={breakdown?.categories || []}
                     cx="50%"
@@ -207,8 +214,13 @@ export default function Financial() {
                   </Pie>
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  Loading breakdown data...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
