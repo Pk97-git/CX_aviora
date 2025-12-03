@@ -66,7 +66,7 @@ export function AlertsPanel() {
       </Button>
 
       {isOpen && (
-        <div className="fixed right-4 bottom-20 w-80 md:w-96 rounded-lg border bg-card shadow-lg z-[9999] overflow-hidden">
+        <div className="fixed right-4 bottom-20 w-80 md:w-96 rounded-lg border bg-white dark:bg-gray-900 shadow-2xl z-[9999] overflow-hidden backdrop-blur-sm">
           <div className="p-4 border-b bg-muted/50">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold flex items-center gap-2">
