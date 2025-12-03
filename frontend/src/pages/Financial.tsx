@@ -96,10 +96,17 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {(roi?.roi_percentage || 0).toFixed(1)}%
+              {(() => {
+                console.log('ROI Data:', roi);
+                const val = roi?.roi_percentage;
+                return (typeof val === 'number' ? val : 0).toFixed(1);
+              })()}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Payback: {(roi?.payback_period_months || 0).toFixed(1)} months
+              Payback: {(() => {
+                const val = roi?.payback_period_months;
+                return (typeof val === 'number' ? val : 0).toFixed(1);
+              })()} months
             </p>
           </CardContent>
         </Card>
