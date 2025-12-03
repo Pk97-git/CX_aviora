@@ -4,10 +4,11 @@ Populate alerts table with mock data for testing
 import asyncio
 import asyncpg
 import os
+import uuid
 from datetime import datetime, timedelta
 
 async def populate_alerts():
-    DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgresql://", "postgresql+asyncpg://")
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
     if not DATABASE_URL:
         print("ERROR: DATABASE_URL environment variable not set")
         return
@@ -19,69 +20,84 @@ async def populate_alerts():
     
     try:
         # Clear existing alerts
-        await conn.execute("DELETE FROM alerts WHERE id > 0")
+        await conn.execute("DELETE FROM alerts WHERE id IS NOT NULL")
         print("✓ Cleared existing alerts")
         
-        # Create mock alerts
+        # Create mock alerts matching the actual schema
         alerts = [
             {
+                "id": str(uuid.uuid4()),
                 "rule_id": "rule_001",
-                "rule_name": "High SLA Breach Rate",
+                "alert_type": "sla_breach",
                 "severity": "critical",
+                "title": "High SLA Breach Rate",
                 "message": "SLA breach rate has exceeded 15% in the last hour. Immediate action required.",
+                "metric_value": 18.5,
                 "triggered_at": datetime.utcnow() - timedelta(minutes=30),
-                "acknowledged": False,
-                "metadata": {"breach_rate": 18.5, "threshold": 15.0}
+                "acknowledged_at": None,
+                "acknowledged_by": None
             },
             {
+                "id": str(uuid.uuid4()),
                 "rule_id": "rule_002",
-                "rule_name": "Churn Risk Alert",
+                "alert_type": "churn_risk",
                 "severity": "high",
+                "title": "Churn Risk Alert",
                 "message": "5 high-value customers showing churn indicators in the past 24 hours.",
+                "metric_value": 5.0,
                 "triggered_at": datetime.utcnow() - timedelta(hours=2),
-                "acknowledged": False,
-                "metadata": {"at_risk_customers": 5, "total_value": 125000}
+                "acknowledged_at": None,
+                "acknowledged_by": None
             },
             {
+                "id": str(uuid.uuid4()),
                 "rule_id": "rule_003",
-                "rule_name": "Sentiment Drop Detected",
+                "alert_type": "sentiment_drop",
                 "severity": "medium",
+                "title": "Sentiment Drop Detected",
                 "message": "Average sentiment score dropped from 0.75 to 0.62 in the last 6 hours.",
+                "metric_value": 0.62,
                 "triggered_at": datetime.utcnow() - timedelta(hours=4),
-                "acknowledged": False,
-                "metadata": {"previous_score": 0.75, "current_score": 0.62}
+                "acknowledged_at": None,
+                "acknowledged_by": None
             },
             {
+                "id": str(uuid.uuid4()),
                 "rule_id": "rule_004",
-                "rule_name": "Volume Spike",
+                "alert_type": "volume_spike",
                 "severity": "medium",
+                "title": "Volume Spike",
                 "message": "Ticket volume increased by 45% compared to the same time last week.",
+                "metric_value": 145.0,
                 "triggered_at": datetime.utcnow() - timedelta(hours=1),
-                "acknowledged": False,
-                "metadata": {"current_volume": 145, "expected_volume": 100}
+                "acknowledged_at": None,
+                "acknowledged_by": None
             }
         ]
         
         for alert in alerts:
             await conn.execute("""
                 INSERT INTO alerts (
-                    rule_id, rule_name, severity, message, 
-                    triggered_at, acknowledged, metadata
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    id, rule_id, alert_type, severity, title, message,
+                    metric_value, triggered_at, acknowledged_at, acknowledged_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             """, 
+                alert["id"],
                 alert["rule_id"],
-                alert["rule_name"],
+                alert["alert_type"],
                 alert["severity"],
+                alert["title"],
                 alert["message"],
+                alert["metric_value"],
                 alert["triggered_at"],
-                alert["acknowledged"],
-                str(alert["metadata"])  # Convert dict to string
+                alert["acknowledged_at"],
+                alert["acknowledged_by"]
             )
         
         print(f"✓ Created {len(alerts)} mock alerts")
         
         # Verify
-        count = await conn.fetchval("SELECT COUNT(*) FROM alerts WHERE acknowledged = false")
+        count = await conn.fetchval("SELECT COUNT(*) FROM alerts WHERE acknowledged_at IS NULL")
         print(f"✓ Total active alerts: {count}")
         
     finally:
