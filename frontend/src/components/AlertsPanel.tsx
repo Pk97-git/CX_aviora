@@ -67,8 +67,12 @@ export function AlertsPanel() {
 
       {isOpen && (
         <div 
-          className="fixed right-4 bottom-20 w-80 md:w-96 rounded-lg border shadow-2xl z-[9999] overflow-hidden"
-          style={{ backgroundColor: 'rgba(255, 255, 255, 1)' }}
+          className="fixed right-4 bottom-20 w-80 md:w-96 rounded-lg border shadow-2xl overflow-hidden"
+          style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 1)',
+            zIndex: 99999,
+            isolation: 'isolate'
+          }}
         >
           <div className="p-4 border-b" style={{ backgroundColor: '#f9fafb' }}>
             <div className="flex items-center justify-between">
