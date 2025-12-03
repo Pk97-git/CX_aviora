@@ -30,6 +30,7 @@ import {
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
 
 export default function Financial() {
+  // Force rebuild for Vercel deployment
   const [days, setDays] = useState(30)
   
   const { data: impact } = useFinancialImpact(days)
