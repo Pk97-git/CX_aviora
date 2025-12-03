@@ -26,9 +26,17 @@ export interface FinancialTrendPoint {
 }
 
 export interface FinancialBreakdownItem {
-  category: string
+  name: string
   value: number
-  percentage: number
+  description: string
+  [key: string]: any
+}
+
+export interface FinancialBreakdownResponse {
+  categories: FinancialBreakdownItem[]
+  time_saved_hours: number
+  period_start: string
+  period_end: string
 }
 
 export const financialApi = {
@@ -47,7 +55,7 @@ export const financialApi = {
     return response.data
   },
 
-  getBreakdown: async (days: number = 30): Promise<FinancialBreakdownItem[]> => {
+  getBreakdown: async (days: number = 30): Promise<FinancialBreakdownResponse> => {
     const response = await apiClient.get('/api/financial/breakdown', { params: { days } })
     return response.data
   },
