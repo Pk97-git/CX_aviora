@@ -70,7 +70,7 @@ export function AlertsPanel() {
           className="fixed right-4 bottom-20 w-80 md:w-96 rounded-lg border shadow-2xl z-[9999] overflow-hidden"
           style={{ backgroundColor: '#ffffff' }}
         >
-          <div className="p-4 border-b bg-muted/50">
+          <div className="p-4 border-b" style={{ backgroundColor: '#f9fafb' }}>
             <div className="flex items-center justify-between">
               <h3 className="font-semibold flex items-center gap-2">
                 System Alerts
@@ -86,7 +86,7 @@ export function AlertsPanel() {
             </p>
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto p-2">
+          <div className="max-h-[400px] overflow-y-auto p-2" style={{ backgroundColor: '#ffffff' }}>
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading alerts...</div>
             ) : activeCount === 0 ? (
