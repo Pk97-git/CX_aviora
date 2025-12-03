@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Aivora Intelligence Service",
     description="AI-powered customer support intelligence and analytics",
-    version="1.0.0",
+    version="1.1.0",  # Bumped to trigger deployment
     lifespan=lifespan
 )
 

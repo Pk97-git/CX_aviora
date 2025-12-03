@@ -21,8 +21,10 @@ class FinancialImpactSummary(BaseModel):
     revenue_protected: float
     cost_saved: float
     churn_prevented_count: int
-    automation_savings: float
-    friction_reduction: float
+    automation_cost_saved: float  # Changed from automation_savings
+    friction_cost_reduced: float  # Changed from friction_reduction
+    resolution_time_saved_hours: float  # Added missing field
+    sla_compliance_bonus: float  # Added missing field
     period_start: str
     period_end: str
 
@@ -81,13 +83,27 @@ async def get_financial_impact(
     friction = float(row.friction or 0)
     cost_saved = automation + friction
     
+    # Query for time saved and SLA bonus
+    time_result = await db.execute(
+        select(
+            func.sum(FinancialMetric.resolution_time_saved_hours).label('time_saved'),
+            func.sum(FinancialMetric.sla_compliance_bonus).label('sla_bonus')
+        ).where(
+            FinancialMetric.date >= start_date,
+            FinancialMetric.date <= end_date
+        )
+    )
+    time_row = time_result.first()
+    
     return FinancialImpactSummary(
         total_value_generated=total_value,
         revenue_protected=revenue,
         cost_saved=cost_saved,
         churn_prevented_count=row.churn_count or 0,
-        automation_savings=automation,
-        friction_reduction=friction,
+        automation_cost_saved=automation,  # Changed field name
+        friction_cost_reduced=friction,  # Changed field name
+        resolution_time_saved_hours=float(time_row.time_saved or 0),  # Added
+        sla_compliance_bonus=float(time_row.sla_bonus or 0),  # Added
         period_start=start_date.isoformat(),
         period_end=end_date.isoformat()
     )
