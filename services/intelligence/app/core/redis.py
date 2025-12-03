@@ -28,4 +28,7 @@ class RedisClient:
             await self.connect()
         return self.redis
 
+    def __getattr__(self, name):
+        return getattr(self.redis, name)
+
 redis_client = RedisClient()
