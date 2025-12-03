@@ -192,7 +192,7 @@ export default function Financial() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={(breakdown?.categories || []) as any}
+                    data={breakdown?.categories || []}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
