@@ -68,7 +68,7 @@ export function AlertsPanel() {
       {isOpen && (
         <div 
           className="fixed right-4 bottom-20 w-80 md:w-96 rounded-lg border shadow-2xl z-[9999] overflow-hidden"
-          style={{ backgroundColor: '#ffffff' }}
+          style={{ backgroundColor: 'rgba(255, 255, 255, 1)' }}
         >
           <div className="p-4 border-b" style={{ backgroundColor: '#f9fafb' }}>
             <div className="flex items-center justify-between">
@@ -100,7 +100,8 @@ export function AlertsPanel() {
                 {alerts?.map((alert) => (
                   <div 
                     key={alert.id} 
-                    className="p-3 rounded-md border bg-background hover:bg-accent/50 transition-colors space-y-2"
+                    className="p-3 rounded-md border hover:bg-accent/50 transition-colors space-y-2"
+                    style={{ backgroundColor: '#ffffff' }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
