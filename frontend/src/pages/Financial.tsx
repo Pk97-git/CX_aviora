@@ -2,27 +2,22 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
-  BarChart, 
-  Bar, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  AreaChart,
+  Area
 } from 'recharts'
 import { 
-  DollarSign, 
-  TrendingUp, 
   Clock, 
   Zap, 
   ShieldCheck,
-  Calendar,
   Download
 } from "lucide-react"
 import { 
@@ -189,7 +184,7 @@ export default function Financial() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={breakdown}
+                    data={breakdown as any}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -198,7 +193,7 @@ export default function Financial() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {breakdown?.map((entry, index) => (
+                    {breakdown?.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
