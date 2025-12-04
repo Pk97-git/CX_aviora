@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     # AI Provider
     GROQ_API_KEY: str
     
+    # Authentication
+    JWT_SECRET_KEY: str = "your-secret-key-change-in-production"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -34,7 +34,14 @@ async def create_tables():
     print("🚀 Creating analytics tables...")
     
     async with engine.begin() as conn:
+        # Drop existing tables to ensure clean schema
+        print("  🗑️ Dropping existing analytics tables...")
+        await conn.run_sync(RCAMetric.__table__.drop, checkfirst=True)
+        await conn.run_sync(SentimentMetric.__table__.drop, checkfirst=True)
+        await conn.run_sync(VolumeForecast.__table__.drop, checkfirst=True)
+        
         # Create tables
+        print("  ✨ Creating new analytics tables...")
         await conn.run_sync(RCAMetric.__table__.create, checkfirst=True)
         await conn.run_sync(SentimentMetric.__table__.create, checkfirst=True)
         await conn.run_sync(VolumeForecast.__table__.create, checkfirst=True)

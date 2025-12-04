@@ -48,9 +48,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register API Routers
-from app.api.routes import tickets, analytics, strategy, workflows, policies, admin, financial, alerts
+# Add Tenant Context Middleware
+from app.middleware.tenant import TenantContextMiddleware
+app.add_middleware(TenantContextMiddleware)
 
+# Register API Routers
+from app.api.routes import tickets, analytics, strategy, workflows, policies, admin, financial, alerts, auth, admin_users
+
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(admin_users.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(tickets.router, prefix="/api/tickets", tags=["Tickets"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(strategy.router, prefix="/api/strategy", tags=["Strategy"])
