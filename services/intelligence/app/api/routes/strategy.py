@@ -16,7 +16,7 @@ from app.api.models.responses import (
     StrategicRecommendation
 )
 from app.core.database import get_db
-from app.models.database import Ticket, AIAnalysis
+from app.models.ticket import Ticket
 
 router = APIRouter()
 

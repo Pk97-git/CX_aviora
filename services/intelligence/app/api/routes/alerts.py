@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from app.core.database import get_db
 from app.models.executive import Alert, AlertRule
-from app.models.database import Ticket
+from app.models.ticket import Ticket
 from app.models.strategy import ChurnPrediction
 from app.models.analytics import SentimentMetric
 
