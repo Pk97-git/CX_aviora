@@ -21,12 +21,14 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { adminApi, Integration } from '@/lib/api/admin'
-import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react'
+import { integrationsApi } from '@/lib/api/integrations'
+import { Plus, Trash2, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
 export default function AdminIntegrationsPage() {
   const [integrations, setIntegrations] = useState<Integration[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [testingId, setTestingId] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Form state
@@ -51,6 +53,34 @@ export default function AdminIntegrationsPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleTestConnection = async (integrationId: string) => {
+    setTestingId(integrationId)
+    try {
+      const result = await integrationsApi.testConnection(integrationId)
+      
+      if (result.status === 'success') {
+        toast({
+          title: 'Success',
+          description: result.message,
+        })
+      } else {
+        toast({
+          title: 'Connection Failed',
+          description: result.message,
+          variant: 'destructive',
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to test connection',
+        variant: 'destructive',
+      })
+    } finally {
+      setTestingId(null)
     }
   }
 
@@ -215,15 +245,33 @@ export default function AdminIntegrationsPage() {
                     {new Date(integration.last_sync_at).toLocaleString()}
                   </div>
                 )}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="w-full mt-4"
-                  onClick={() => handleDeleteIntegration(integration.id)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Remove
-                </Button>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleTestConnection(integration.id)}
+                    disabled={testingId === integration.id}
+                  >
+                    {testingId === integration.id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Testing...
+                      </>
+                    ) : (
+                      'Test Connection'
+                    )}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleDeleteIntegration(integration.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

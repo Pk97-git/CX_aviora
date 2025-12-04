@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { ticketsApi, TicketDetail, Comment } from '@/lib/api/tickets'
-import { ArrowLeft, MessageSquare, Sparkles, TrendingUp, Tag } from 'lucide-react'
+import { integrationsApi } from '@/lib/api/integrations'
+import { ArrowLeft, MessageSquare, Sparkles, TrendingUp, Tag, ExternalLink, Send } from 'lucide-react'
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,6 +27,8 @@ export default function TicketDetailPage() {
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [isInternal, setIsInternal] = useState(false)
+  const [creatingJira, setCreatingJira] = useState(false)
+  const [sendingSlack, setSendingSlack] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -95,6 +98,44 @@ export default function TicketDetailPage() {
         description: 'Failed to add comment',
         variant: 'destructive',
       })
+    }
+  }
+
+  const handleCreateJiraIssue = async () => {
+    setCreatingJira(true)
+    try {
+      const result = await integrationsApi.createJiraIssue(id!)
+      toast({
+        title: 'Success',
+        description: `Created JIRA issue: ${result.issue_key}`,
+      })
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.detail || 'Failed to create JIRA issue',
+        variant: 'destructive',
+      })
+    } finally {
+      setCreatingJira(false)
+    }
+  }
+
+  const handleSendSlackNotification = async () => {
+    setSendingSlack(true)
+    try {
+      await integrationsApi.sendSlackNotification(id!)
+      toast({
+        title: 'Success',
+        description: 'Slack notification sent',
+      })
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.detail || 'Failed to send Slack notification',
+        variant: 'destructive',
+      })
+    } finally {
+      setSendingSlack(false)
     }
   }
 
@@ -353,6 +394,37 @@ export default function TicketDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Integration Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleCreateJiraIssue}
+                disabled={creatingJira || !!ticket.metadata?.jira_issue}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                {ticket.metadata?.jira_issue
+                  ? `JIRA: ${ticket.metadata.jira_issue}`
+                  : creatingJira
+                  ? 'Creating...'
+                  : 'Create JIRA Issue'}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleSendSlackNotification}
+                disabled={sendingSlack}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {sendingSlack ? 'Sending...' : 'Send to Slack'}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
