@@ -54,8 +54,8 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False
 )
 
-# Base class for models
-Base = declarative_base()
+# Import Base from models (don't create duplicate)
+from app.models.database import Base
 
 
 async def get_db() -> AsyncSession:

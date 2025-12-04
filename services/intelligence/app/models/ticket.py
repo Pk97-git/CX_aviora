@@ -47,7 +47,8 @@ class Ticket(Base):
     
     # Metadata
     tags = Column(JSONB, default=[])
-    metadata = Column(JSONB, default={})
+    ticket_metadata = Column("metadata", JSONB, default={})  # Use column name override to avoid reserved word
+    
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -87,3 +88,18 @@ class TicketComment(Base):
     tenant = relationship("Tenant")
     ticket = relationship("Ticket", back_populates="comments")
     author = relationship("User", foreign_keys=[author_id])
+
+
+# Pydantic model for AI analysis results (used by services)
+from pydantic import BaseModel
+from typing import List, Dict, Optional
+
+class AnalysisResult(BaseModel):
+    """AI analysis results for a ticket"""
+    summary: str
+    intent: str
+    category: str
+    sentiment: float
+    urgency_score: Optional[float] = None
+    entities: Optional[Dict] = None
+    suggested_actions: Optional[List[Dict]] = None
