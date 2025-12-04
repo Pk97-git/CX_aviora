@@ -41,7 +41,17 @@ async def create_tables():
     print("🚀 Creating executive feature tables...")
     
     async with engine.begin() as conn:
+        # Drop existing tables to ensure clean schema
+        print("  🗑️ Dropping existing executive tables...")
+        await conn.run_sync(FinancialMetric.__table__.drop, checkfirst=True)
+        await conn.run_sync(ROICalculation.__table__.drop, checkfirst=True)
+        await conn.run_sync(AlertRule.__table__.drop, checkfirst=True)
+        await conn.run_sync(Alert.__table__.drop, checkfirst=True)
+        await conn.run_sync(SavedReport.__table__.drop, checkfirst=True)
+        await conn.run_sync(ReportDelivery.__table__.drop, checkfirst=True)
+
         # Create tables
+        print("  ✨ Creating new executive tables...")
         await conn.run_sync(FinancialMetric.__table__.create, checkfirst=True)
         await conn.run_sync(ROICalculation.__table__.create, checkfirst=True)
         await conn.run_sync(AlertRule.__table__.create, checkfirst=True)

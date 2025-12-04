@@ -4,6 +4,7 @@ Populate executive feature tables with initial data.
 import asyncio
 import asyncpg
 import os
+import json
 from datetime import datetime, timedelta, date
 from uuid import uuid4
 from decimal import Decimal
@@ -104,7 +105,7 @@ async def populate_executive_data():
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             """, str(uuid4()), rule["name"], rule["metric_type"],
                 rule["threshold_value"], rule["severity"],
-                rule["notification_channels"], True, datetime.utcnow())
+                json.dumps(rule["notification_channels"]), True, datetime.utcnow())
         
         print(f"  ✅ Inserted {len(ALERT_RULES)} alert rules")
         
