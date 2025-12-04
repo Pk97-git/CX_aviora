@@ -1,242 +1,359 @@
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  ArrowLeft, 
-  Send, 
-  Paperclip, 
-  MoreVertical, 
-  User, 
-  Sparkles,
-  MessageSquare,
-  Mail,
-  ShoppingBag,
-  AlertCircle,
-  CheckCircle2
-} from "lucide-react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { ticketsApi, TicketDetail, Comment } from '@/lib/api/tickets'
+import { ArrowLeft, MessageSquare, Sparkles, TrendingUp, Tag } from 'lucide-react'
 
-export default function TicketDetail() {
+export default function TicketDetailPage() {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { id } = useParams()
+  const { toast } = useToast()
+  
+  const [ticket, setTicket] = useState<TicketDetail | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [newComment, setNewComment] = useState('')
+  const [isInternal, setIsInternal] = useState(false)
+
+  useEffect(() => {
+    if (id) {
+      loadTicket()
+      loadComments()
+    }
+  }, [id])
+
+  const loadTicket = async () => {
+    try {
+      const data = await ticketsApi.get(id!)
+      setTicket(data)
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load ticket',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadComments = async () => {
+    try {
+      const data = await ticketsApi.getComments(id!)
+      setComments(data)
+    } catch (error: any) {
+      console.error('Failed to load comments:', error)
+    }
+  }
+
+  const handleStatusChange = async (status: string) => {
+    try {
+      await ticketsApi.update(id!, { status })
+      toast({
+        title: 'Success',
+        description: 'Ticket status updated',
+      })
+      loadTicket()
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return
+
+    try {
+      await ticketsApi.addComment(id!, {
+        content: newComment,
+        is_internal: isInternal,
+      })
+      toast({
+        title: 'Success',
+        description: 'Comment added',
+      })
+      setNewComment('')
+      loadComments()
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to add comment',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const getSentimentEmoji = (sentiment: number | null) => {
+    if (!sentiment) return '😐'
+    if (sentiment > 0.5) return '😊'
+    if (sentiment > 0) return '🙂'
+    if (sentiment > -0.5) return '😐'
+    return '😞'
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!ticket) {
+    return (
+      <div className="container mx-auto py-6">
+        <p>Ticket not found</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] -m-8">
-      {/* Left Sidebar - Ticket List (Collapsed/Mini view could go here, but keeping it simple for now) */}
-      
-      {/* Main Content - Conversation Stream */}
-      <div className="flex-1 flex flex-col border-r bg-background">
-        {/* Header */}
-        <div className="h-16 border-b flex items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/tickets')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-lg">Refund request {'>'} $500</h2>
-                <Badge variant="outline" className="bg-violet-50 text-violet-700">#{id || 'a3f2b1c4'}</Badge>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> via Email</span>
-                <span>•</span>
-                <span>Created 2 hours ago</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <User className="mr-2 h-4 w-4" /> Assign
-            </Button>
-            <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700">
-              <CheckCircle2 className="mr-2 h-4 w-4" /> Resolve
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+    <div className="container mx-auto py-6 max-w-6xl">
+      <Button variant="ghost" onClick={() => navigate('/tickets')} className="mb-4">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Tickets
+      </Button>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
-          
-          {/* Customer Message */}
-          <div className="flex gap-4">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
-              JD
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-sm">John Doe</span>
-                <span className="text-xs text-muted-foreground">Today, 10:23 AM</span>
-              </div>
-              <div className="bg-white dark:bg-card border rounded-lg p-4 shadow-sm text-sm leading-relaxed">
-                <p>Hi,</p>
-                <p className="mt-2">I recently purchased the Premium Enterprise Plan (Order #ORD-2024-889) but realized it doesn't fit our current needs. We haven't used any of the features yet.</p>
-                <p className="mt-2">Since it's been less than 24 hours, I'd like to request a full refund of the $599 charge.</p>
-                <p className="mt-2">Thanks,<br/>John</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Internal Note */}
-          <div className="flex gap-4 px-8">
-            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold shrink-0 text-xs">
-              SYS
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-sm text-amber-600">Aivora System Note</span>
-                <span className="text-xs text-muted-foreground">Today, 10:24 AM</span>
-              </div>
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
-                <div className="flex items-center gap-2 font-medium mb-1">
-                  <AlertCircle className="h-4 w-4" /> High Value Refund Detected
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Ticket Header */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-2xl">{ticket.title}</CardTitle>
+                  <CardDescription className="mt-2">
+                    From {ticket.customer_name || 'Unknown'} ({ticket.customer_email})
+                  </CardDescription>
                 </div>
-                Ticket value ($599) exceeds auto-approval threshold ($500). Routed to Manager Approval Queue.
+                <Select value={ticket.status} onValueChange={handleStatusChange}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap">{ticket.description}</p>
+              <div className="flex gap-2 mt-4">
+                <Badge>{ticket.priority || 'No priority'}</Badge>
+                <Badge variant="outline">{ticket.status}</Badge>
+                {ticket.ai_category && (
+                  <Badge variant="secondary">{ticket.ai_category}</Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-        </div>
+          {/* AI Insights */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                AI Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Summary */}
+              {ticket.ai_summary && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Summary</h4>
+                  <p className="text-sm text-muted-foreground">{ticket.ai_summary}</p>
+                </div>
+              )}
 
-        {/* Input Area */}
-        <div className="p-4 border-t bg-background">
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-card focus-within:ring-1 focus-within:ring-primary transition-all">
-            <div className="flex items-center gap-2 p-2 border-b bg-slate-50 dark:bg-slate-900/50 rounded-t-lg">
-              <Button variant="ghost" size="sm" className="h-8 text-xs font-medium bg-white dark:bg-slate-800 shadow-sm">Reply</Button>
-              <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-amber-600">Internal Note</Button>
-              <div className="h-4 w-px bg-border mx-1" />
-              <Button variant="ghost" size="icon" className="h-8 w-8"><Sparkles className="h-4 w-4 text-violet-500" /></Button>
-            </div>
-            <textarea 
-              className="w-full p-3 min-h-[100px] resize-none bg-transparent border-none focus:outline-none text-sm"
-              placeholder="Type your reply... Use @ to mention teammates."
-            />
-            <div className="flex items-center justify-between p-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button size="sm" className="gap-2">
-                Send Reply <Send className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Sidebar - Context & AI */}
-      <div className="w-[350px] border-l bg-slate-50/50 dark:bg-slate-950/50 overflow-y-auto p-4 space-y-6">
-        
-        {/* Customer Profile */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              Customer Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-bold">
-                JD
-              </div>
-              <div>
-                <h3 className="font-semibold">John Doe</h3>
-                <p className="text-xs text-muted-foreground">john.doe@example.com</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="p-2 bg-background rounded border text-center">
-                <p className="text-xs text-muted-foreground">LTV</p>
-                <p className="font-semibold text-green-600">$2,450</p>
-              </div>
-              <div className="p-2 bg-background rounded border text-center">
-                <p className="text-xs text-muted-foreground">Orders</p>
-                <p className="font-semibold">12</p>
-              </div>
-              <div className="p-2 bg-background rounded border text-center col-span-2">
-                <p className="text-xs text-muted-foreground">Tags</p>
-                <div className="flex gap-1 justify-center mt-1">
-                  <Badge variant="secondary" className="text-[10px]">VIP</Badge>
-                  <Badge variant="secondary" className="text-[10px]">Enterprise</Badge>
+              {/* Intent & Category */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Intent</h4>
+                  <Badge variant="outline" className="capitalize">
+                    {ticket.ai_intent?.replace('_', ' ') || 'Unknown'}
+                  </Badge>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Sentiment</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{getSentimentEmoji(ticket.ai_sentiment)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {ticket.ai_sentiment?.toFixed(2) || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* AI Copilot */}
-        <Card className="border-violet-200 dark:border-violet-900 bg-gradient-to-b from-violet-50 to-white dark:from-violet-950/30 dark:to-background">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-violet-700 dark:text-violet-400">
-              <Sparkles className="h-4 w-4" />
-              AI Copilot
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            
-            {/* Sentiment */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Sentiment Analysis</span>
-                <span className="font-medium text-amber-600">Neutral (45%)</span>
+              {/* Entities */}
+              {ticket.ai_entities && Object.keys(ticket.ai_entities).length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Extracted Entities</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(ticket.ai_entities).map(([key, value]) => (
+                      <Badge key={key} variant="secondary">
+                        {key}: {String(value)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Suggested Actions */}
+              {ticket.ai_suggested_actions && ticket.ai_suggested_actions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Suggested Actions</h4>
+                  <div className="space-y-2">
+                    {ticket.ai_suggested_actions.map((action, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-sm">
+                        <TrendingUp className="h-4 w-4 mt-0.5 text-green-600" />
+                        <div className="flex-1">
+                          <div className="font-medium">{action.action}</div>
+                          <div className="text-xs text-muted-foreground">{action.reason}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Confidence: {(action.confidence * 100).toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Comments */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Comments ({comments.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="border-l-2 pl-4 py-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-sm">
+                      {comment.author_name || 'Unknown'}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {comment.author_type}
+                    </Badge>
+                    {comment.is_internal && (
+                      <Badge variant="secondary" className="text-xs">
+                        Internal
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {new Date(comment.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                </div>
+              ))}
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Add a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  rows={3}
+                />
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isInternal}
+                      onChange={(e) => setIsInternal(e.target.checked)}
+                    />
+                    Internal note
+                  </label>
+                  <Button onClick={handleAddComment} className="ml-auto">
+                    Add Comment
+                  </Button>
+                </div>
               </div>
-              <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 w-[45%] rounded-full" />
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Suggested Actions */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Suggested Actions</p>
-              <Button variant="outline" className="w-full justify-start h-auto py-2 px-3 text-xs bg-white dark:bg-card hover:border-violet-300 hover:bg-violet-50 transition-colors">
-                <CheckCircle2 className="h-3 w-3 mr-2 text-green-600" />
-                Approve Refund ($599)
-              </Button>
-              <Button variant="outline" className="w-full justify-start h-auto py-2 px-3 text-xs bg-white dark:bg-card hover:border-violet-300 hover:bg-violet-50 transition-colors">
-                <MessageSquare className="h-3 w-3 mr-2 text-blue-600" />
-                Ask for Feedback
-              </Button>
-            </div>
-
-            {/* Smart Summary */}
-            <div className="bg-white dark:bg-card rounded-lg p-3 text-xs border shadow-sm">
-              <p className="font-medium mb-1 text-violet-700 dark:text-violet-400">Smart Summary</p>
-              <p className="text-muted-foreground leading-relaxed">
-                Customer requesting refund for Enterprise Plan ($599) purchased {`<`}24h ago. Reason: Features don't fit needs. Policy allows refund, but amount requires approval.
-              </p>
-            </div>
-
-          </CardContent>
-        </Card>
-
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-              Recent Orders
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
+        {/* Sidebar */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
               <div>
-                <p className="font-medium">#ORD-2024-889</p>
-                <p className="text-xs text-muted-foreground">Yesterday</p>
+                <div className="text-muted-foreground">Created</div>
+                <div>{new Date(ticket.created_at).toLocaleString()}</div>
               </div>
-              <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">$599.00</Badge>
-            </div>
-            <div className="flex items-center justify-between text-sm">
               <div>
-                <p className="font-medium">#ORD-2024-102</p>
-                <p className="text-xs text-muted-foreground">2 weeks ago</p>
+                <div className="text-muted-foreground">Updated</div>
+                <div>{new Date(ticket.updated_at).toLocaleString()}</div>
               </div>
-              <Badge variant="outline" className="text-slate-600">$49.00</Badge>
-            </div>
-          </CardContent>
-        </Card>
+              {ticket.resolved_at && (
+                <div>
+                  <div className="text-muted-foreground">Resolved</div>
+                  <div>{new Date(ticket.resolved_at).toLocaleString()}</div>
+                </div>
+              )}
+              <div>
+                <div className="text-muted-foreground">Source</div>
+                <Badge variant="outline" className="capitalize">
+                  {ticket.source || 'manual'}
+                </Badge>
+              </div>
+              {ticket.assigned_team && (
+                <div>
+                  <div className="text-muted-foreground">Team</div>
+                  <div className="capitalize">{ticket.assigned_team}</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
+          {ticket.tags && ticket.tags.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Tags
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {ticket.tags.map((tag, idx) => (
+                    <Badge key={idx} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   )
