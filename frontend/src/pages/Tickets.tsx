@@ -1,178 +1,238 @@
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card } from "@/components/ui/card"
-import { CheckSquare, UserPlus, ArrowRight, AlertCircle } from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import { useTickets } from "@/hooks/useTickets"
-import { useState } from "react"
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { ticketsApi, Ticket } from '@/lib/api/tickets'
+import { Search, Filter } from 'lucide-react'
 
-export default function Tickets() {
+export default function TicketsPage() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [priorityFilter, setPriorityFilter] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
-  const { data, isLoading, error } = useTickets({ 
-    status: statusFilter,
-    page: 1,
-    page_size: 50
-  })
+  const { toast } = useToast()
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800'
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800'
-      case 'pending_approval': return 'bg-purple-100 text-purple-800'
-      case 'resolved': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+  useEffect(() => {
+    loadTickets()
+  }, [statusFilter, priorityFilter])
+
+  const loadTickets = async () => {
+    try {
+      const data = await ticketsApi.list({
+        status: statusFilter || undefined,
+        priority: priorityFilter || undefined,
+        search: searchQuery || undefined,
+      })
+      setTickets(data)
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load tickets',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getPriorityColor = (priority: string) => {
+  const handleSearch = () => {
+    loadTickets()
+  }
+
+  const getSentimentColor = (sentiment: number | null) => {
+    if (!sentiment) return 'bg-gray-100 text-gray-800'
+    if (sentiment > 0.3) return 'bg-green-100 text-green-800'
+    if (sentiment < -0.3) return 'bg-red-100 text-red-800'
+    return 'bg-yellow-100 text-yellow-800'
+  }
+
+  const getSentimentLabel = (sentiment: number | null) => {
+    if (!sentiment) return 'Neutral'
+    if (sentiment > 0.3) return 'Positive'
+    if (sentiment < -0.3) return 'Negative'
+    return 'Neutral'
+  }
+
+  const getPriorityColor = (priority: string | null) => {
     switch (priority) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-300'
-      case 'urgent': return 'bg-orange-100 text-orange-800 border-orange-300'
-      case 'high': return 'bg-amber-100 text-amber-800 border-amber-300'
-      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-300'
-      default: return 'bg-gray-100 text-gray-800 border-gray-300'
+      case 'urgent':
+        return 'bg-red-100 text-red-800'
+      case 'high':
+        return 'bg-orange-100 text-orange-800'
+      case 'medium':
+        return 'bg-blue-100 text-blue-800'
+      case 'low':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
-  if (error) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Failed to load tickets</h2>
-          <p className="text-muted-foreground">{error.message}</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Tickets</h1>
-          <p className="text-sm text-muted-foreground">
-            {isLoading ? 'Loading...' : `${data?.total || 0} total tickets`}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <CheckSquare className="h-4 w-4 mr-2" />
-            Bulk Assign
-          </Button>
-          <Button variant="outline">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Auto-Route
-          </Button>
-        </div>
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Tickets</h1>
+        <p className="text-muted-foreground">Manage customer support tickets with AI insights</p>
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
-        <div className="flex gap-2">
-          <Button 
-            variant={statusFilter === undefined ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setStatusFilter(undefined)}
-          >
-            All
-          </Button>
-          <Button 
-            variant={statusFilter === 'open' ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setStatusFilter('open')}
-          >
-            Open
-          </Button>
-          <Button 
-            variant={statusFilter === 'in_progress' ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setStatusFilter('in_progress')}
-          >
-            In Progress
-          </Button>
-          <Button 
-            variant={statusFilter === 'pending_approval' ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setStatusFilter('pending_approval')}
-          >
-            Pending Approval
-          </Button>
-        </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Search tickets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button onClick={handleSearch} size="icon">
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Priorities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Priorities</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStatusFilter('')
+                setPriorityFilter('')
+                setSearchQuery('')
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Tickets Table */}
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Subject</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>AI Intent</TableHead>
-              <TableHead>Assignee</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <CardHeader>
+          <CardTitle>All Tickets ({tickets.length})</CardTitle>
+          <CardDescription>Click on a ticket to view details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-3">Loading tickets...</span>
-                  </div>
-                </TableCell>
+                <TableHead>Title</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>AI Category</TableHead>
+                <TableHead>Sentiment</TableHead>
+                <TableHead>Created</TableHead>
               </TableRow>
-            ) : data?.tickets.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  No tickets found
-                </TableCell>
-              </TableRow>
-            ) : (
-              data?.tickets.map((ticket) => (
-                <TableRow 
-                  key={ticket.id} 
+            </TableHeader>
+            <TableBody>
+              {tickets.map((ticket) => (
+                <TableRow
+                  key={ticket.id}
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => navigate(`/tickets/${ticket.id}`)}
                 >
-                  <TableCell className="font-medium max-w-md truncate">
-                    {ticket.subject}
+                  <TableCell className="font-medium max-w-md">
+                    <div className="truncate">{ticket.title}</div>
+                    {ticket.ai_summary && (
+                      <div className="text-xs text-muted-foreground truncate mt-1">
+                        {ticket.ai_summary}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(ticket.status)} variant="secondary">
-                      {ticket.status.replace('_', ' ')}
+                    <div>{ticket.customer_name || 'Unknown'}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {ticket.customer_email}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="capitalize">
+                      {ticket.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getPriorityColor(ticket.priority)} variant="outline">
-                      {ticket.priority}
+                    <Badge className={getPriorityColor(ticket.priority)}>
+                      {ticket.priority || 'None'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {ticket.ai_analysis?.intent || 'Analyzing...'}
+                  <TableCell>
+                    <Badge variant="secondary" className="capitalize">
+                      {ticket.ai_category || 'Uncategorized'}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">
-                    {ticket.assignee || 'Unassigned'}
+                  <TableCell>
+                    <Badge className={getSentimentColor(ticket.ai_sentiment)}>
+                      {getSentimentLabel(ticket.ai_sentiment)}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell>
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+
+          {tickets.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No tickets found</p>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   )
