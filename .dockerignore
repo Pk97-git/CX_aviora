@@ -1,0 +1,39 @@
+# Docker
+docker-compose.yml
+.dockerignore
+**/Dockerfile
+**/.dockerignore
+
+# Build outputs
+**/dist
+**/build
+**/.next
+
+# Dependencies
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+
+# Environment
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+**/*.log
+**/logs
+
+# Test coverage
+**/coverage
+**/.coverage
