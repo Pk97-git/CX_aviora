@@ -8,9 +8,14 @@ import os
 
 async def init_database():
     DATABASE_URL = os.getenv(
-        "DATABASE_URL",
-        "postgresql://neondb_owner:***REMOVED***@ep-young-snow-a1h4us5d-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+        "DATABASE_URL"
     )
+    
+    if not DATABASE_URL:
+        print("❌ ERROR: DATABASE_URL environment variable not set")
+        print("Please set DATABASE_URL before running this script")
+        return
+    
     
     # Convert asyncpg URL format
     DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
