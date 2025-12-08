@@ -9,8 +9,18 @@ import Insights from '@/pages/Insights'
 import Strategy from '@/pages/Strategy'
 import Financial from '@/pages/Financial'
 import Settings from '@/pages/Settings'
+import Login from '@/pages/Login'
+import Signup from '@/pages/Signup'
 
 export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/signup',
+    element: <Signup />,
+  },
   {
     path: '/',
     element: <AppLayout />,

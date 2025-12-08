@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://aivora-intelligence-service.onrender.com'
+// Use localhost for development, production URL as fallback
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.DEV ? 'http://localhost:8000' : 'https://aivora-intelligence-service.onrender.com')
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
