@@ -2,16 +2,20 @@ version: '3.8'
 
 services:
   intelligence:
+version: '3.8'
+
+services:
+  intelligence:
     build:
       context: ./services/intelligence
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://neondb_owner:***REMOVED***@ep-young-snow-a1h4us5d-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-      - REDIS_URL=redis://localhost:6379
-      - GROQ_API_KEY=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
-      - JWT_SECRET_KEY=your-super-secret-jwt-key-change-in-production
+      - DATABASE_URL=${DATABASE_URL}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production}
+      - REDIS_URL=redis://redis:6379
     volumes:
       - ./services/intelligence:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
