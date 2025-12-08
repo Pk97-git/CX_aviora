@@ -2,10 +2,6 @@ version: '3.8'
 
 services:
   intelligence:
-version: '3.8'
-
-services:
-  intelligence:
     build:
       context: ./services/intelligence
       dockerfile: Dockerfile
@@ -15,7 +11,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production}
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://localhost:6379
     volumes:
       - ./services/intelligence:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
