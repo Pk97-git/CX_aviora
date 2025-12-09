@@ -23,7 +23,7 @@ async def get_tickets_with_analysis(
     Fetch tickets with AI analysis, with optional filters.
     Returns (tickets, total_count)
     """
-    from app.models.database import Ticket, AIAnalysis
+    from app.models.ticket import Ticket, AIAnalysis
     
     # Build query
     query = select(Ticket, AIAnalysis).outerjoin(
@@ -97,7 +97,7 @@ async def get_dashboard_kpis(db: AsyncSession) -> Dict[str, Any]:
     """
     Calculate dashboard KPIs for the last 7 days.
     """
-    from app.models.database import Ticket
+    from app.models.ticket import Ticket
     
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     
@@ -167,7 +167,7 @@ async def get_rca_data(db: AsyncSession, days: int = 30) -> List[Dict[str, Any]]
     """
     Get Root Cause Analysis - top issues by volume.
     """
-    from app.models.database import Ticket, AIAnalysis
+    from app.models.ticket import Ticket, AIAnalysis
     
     start_date = datetime.utcnow() - timedelta(days=days)
     
@@ -202,7 +202,7 @@ async def get_sentiment_trend(db: AsyncSession, days: int = 7) -> List[Dict[str,
     """
     Get sentiment trend over the last N days.
     """
-    from app.models.database import Ticket, AIAnalysis
+    from app.models.ticket import Ticket, AIAnalysis
     
     start_date = datetime.utcnow() - timedelta(days=days)
     

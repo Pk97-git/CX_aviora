@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Intelligence Service starting up...")
     
+    # Initialize Database
+    from app.core.database import init_db
+    await init_db()
+    
     # Start Redis Consumer in background
     import asyncio
     from app.consumers.redis_consumer import redis_consumer

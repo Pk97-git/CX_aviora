@@ -4,6 +4,9 @@ Database connection and session management.
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from app.core.config import get_settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -56,6 +59,25 @@ AsyncSessionLocal = async_sessionmaker(
 
 # Import Base from models (don't create duplicate)
 from app.models.database import Base
+
+
+async def init_db():
+    """
+    Initialize database tables.
+    """
+    # Import all models so Base.metadata knows about them
+    from app.models.tenant import Tenant, User, APIKey, Integration
+    from app.models.ticket import Ticket, TicketComment, AIAnalysis
+    from app.models.executive import FinancialMetric, ROICalculation, AlertRule, Alert, SavedReport, ReportDelivery
+    from app.models.strategy import ChurnPrediction, FeatureRequest, CompetitorAnalysis, MarketTrend
+    from app.models.analytics import TicketMetric, AgentPerformance, SentimentMetric
+    from app.models.workflow import Workflow, WorkflowExecution, WorkflowLog
+    from app.models.policy import Policy, PolicyVersion, ComplianceCheck, AuditLog
+    
+    async with engine.begin() as conn:
+        # Create all tables
+        await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created successfully")
 
 
 async def get_db() -> AsyncSession:
