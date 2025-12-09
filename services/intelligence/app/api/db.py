@@ -23,12 +23,10 @@ async def get_tickets_with_analysis(
     Fetch tickets with AI analysis, with optional filters.
     Returns (tickets, total_count)
     """
-    from app.models.ticket import Ticket, AIAnalysis
+    from app.models.ticket import Ticket
     
     # Build query
-    query = select(Ticket, AIAnalysis).outerjoin(
-        AIAnalysis, Ticket.id == AIAnalysis.ticket_id
-    )
+    query = select(Ticket)
     
     # Apply filters
     filters = []
@@ -56,36 +54,37 @@ async def get_tickets_with_analysis(
     query = query.order_by(Ticket.created_at.desc()).limit(limit).offset(offset)
     
     result = await db.execute(query)
-    rows = result.all()
+    tickets_rows = result.scalars().all()
     
-    # Format results - MAP DB FIELDS TO FRONTEND EXPECTATIONS + Convert UUIDs to strings
+    # Format results
     tickets = []
-    for ticket, analysis in rows:
+    for ticket in tickets_rows:
         # MAP DB FIELDS TO FRONTEND EXPECTATIONS + Convert UUIDs to strings
         ticket_dict = {
-            "id": str(ticket.id),  # UUID -> str
-            "subject": ticket.title,  # DB: title -> Frontend: subject
+            "id": str(ticket.id),
+            "subject": ticket.title,
             "description": ticket.description or "",
             "status": ticket.status,
             "priority": ticket.priority,
-            "source": ticket.external_source or "",  # DB: external_source -> Frontend: source
-            "customer_id": str(ticket.customer_id) if ticket.customer_id else None,  # UUID -> str
+            "source": ticket.source or "",
+            "customer_id": str(ticket.customer_id) if ticket.customer_id else None,
             "customer_email": ticket.customer_email or "",
             "customer_name": ticket.customer_name or "",
-            "assignee": str(ticket.assigned_to) if ticket.assigned_to else None,  # DB: assigned_to -> Frontend: assignee, UUID -> str
+            "assignee": str(ticket.assigned_to) if ticket.assigned_to else None,
             "created_at": ticket.created_at,
             "updated_at": ticket.updated_at,
             "resolved_at": ticket.resolved_at,
-            "sla_breach_at": ticket.sla_due_at,  # DB: sla_due_at -> Frontend: sla_breach_at
+            "sla_breach_at": None, # ticket.sla_due_at if hasattr(ticket, 'sla_due_at') else None,
         }
         
-        if analysis:
+        # Map embedded AI fields
+        if ticket.ai_summary or ticket.ai_sentiment is not None:
             ticket_dict["ai_analysis"] = {
-                "sentiment": analysis.sentiment,
-                "intent": analysis.intent,
-                "priority_score": analysis.priority_score,
-                "summary": analysis.summary,
-                "suggested_actions": analysis.suggested_actions or []
+                "sentiment": ticket.ai_sentiment,
+                "intent": ticket.ai_intent,
+                "priority_score": 0.0, # Not in DB currently
+                "summary": ticket.ai_summary,
+                "suggested_actions": ticket.ai_suggested_actions or []
             }
         
         tickets.append(ticket_dict)
@@ -167,22 +166,23 @@ async def get_rca_data(db: AsyncSession, days: int = 30) -> List[Dict[str, Any]]
     """
     Get Root Cause Analysis - top issues by volume.
     """
-    from app.models.ticket import Ticket, AIAnalysis
+    from app.models.ticket import Ticket
     
     start_date = datetime.utcnow() - timedelta(days=days)
     
     query = select(
-        AIAnalysis.intent.label('name'),
-        func.count(AIAnalysis.id).label('count'),
-        func.avg(AIAnalysis.sentiment).label('avg_sentiment')
-    ).select_from(AIAnalysis).join(
-        Ticket, AIAnalysis.ticket_id == Ticket.id
+        Ticket.ai_intent.label('name'),
+        func.count(Ticket.id).label('count'),
+        func.avg(Ticket.ai_sentiment).label('avg_sentiment')
     ).where(
-        Ticket.created_at >= start_date
+        and_(
+            Ticket.created_at >= start_date,
+            Ticket.ai_intent.isnot(None)
+        )
     ).group_by(
-        AIAnalysis.intent
+        Ticket.ai_intent
     ).order_by(
-        func.count(AIAnalysis.id).desc()
+        func.count(Ticket.id).desc()
     ).limit(10)
     
     result = await db.execute(query)
@@ -202,17 +202,18 @@ async def get_sentiment_trend(db: AsyncSession, days: int = 7) -> List[Dict[str,
     """
     Get sentiment trend over the last N days.
     """
-    from app.models.ticket import Ticket, AIAnalysis
+    from app.models.ticket import Ticket
     
     start_date = datetime.utcnow() - timedelta(days=days)
     
     query = select(
         func.date(Ticket.created_at).label('date'),
-        func.avg(AIAnalysis.sentiment).label('score')
-    ).select_from(AIAnalysis).join(
-        Ticket, AIAnalysis.ticket_id == Ticket.id
+        func.avg(Ticket.ai_sentiment).label('score')
     ).where(
-        Ticket.created_at >= start_date
+        and_(
+            Ticket.created_at >= start_date,
+            Ticket.ai_sentiment.isnot(None)
+        )
     ).group_by(
         func.date(Ticket.created_at)
     ).order_by(

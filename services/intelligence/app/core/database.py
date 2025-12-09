@@ -67,7 +67,7 @@ async def init_db():
     """
     # Import all models so Base.metadata knows about them
     from app.models.tenant import Tenant, User, APIKey, Integration
-    from app.models.ticket import Ticket, TicketComment, AIAnalysis
+    from app.models.ticket import Ticket, TicketComment
     from app.models.executive import FinancialMetric, ROICalculation, AlertRule, Alert, SavedReport, ReportDelivery
     from app.models.strategy import ChurnPrediction, FeatureRequest, CompetitorAnalysis, MarketTrend
     from app.models.analytics import TicketMetric, AgentPerformance, SentimentMetric
