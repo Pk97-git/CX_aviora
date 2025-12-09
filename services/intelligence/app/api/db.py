@@ -74,7 +74,7 @@ async def get_tickets_with_analysis(
             "created_at": ticket.created_at,
             "updated_at": ticket.updated_at,
             "resolved_at": ticket.resolved_at,
-            "sla_breach_at": None, # ticket.sla_due_at if hasattr(ticket, 'sla_due_at') else None,
+            "sla_breach_at": ticket.sla_due_at,
         }
         
         # Map embedded AI fields
