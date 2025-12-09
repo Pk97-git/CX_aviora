@@ -69,10 +69,8 @@ async def init_db():
     from app.models.tenant import Tenant, User, APIKey, Integration
     from app.models.ticket import Ticket, TicketComment
     from app.models.executive import FinancialMetric, ROICalculation, AlertRule, Alert, SavedReport, ReportDelivery
-    from app.models.strategy import ChurnPrediction, FeatureRequest, CompetitorAnalysis, MarketTrend
-    from app.models.analytics import TicketMetric, AgentPerformance, SentimentMetric
-    from app.models.workflow import Workflow, WorkflowExecution, WorkflowLog
-    from app.models.policy import Policy, PolicyVersion, ComplianceCheck, AuditLog
+    from app.models.strategy import TopicCluster, RegionalData, ChurnPrediction, FrictionCost, StrategicRecommendation
+    from app.models.analytics import RCAMetric, SentimentMetric, VolumeForecast, AgentPerformance
     
     async with engine.begin() as conn:
         # Create all tables
