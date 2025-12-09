@@ -213,7 +213,7 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
     """
     Refresh access token using refresh token
     """
-    from jose import jwt, JWTError
+    import jwt
     from app.core.auth import SECRET_KEY, ALGORITHM
     
     try:
@@ -268,7 +268,7 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
             }
         )
         
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"

@@ -3,7 +3,7 @@ Authentication and authorization utilities
 """
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -81,7 +81,7 @@ async def get_current_user(
         if user_id is None or tenant_id is None:
             raise credentials_exception
             
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise credentials_exception
     
     # Fetch user from database

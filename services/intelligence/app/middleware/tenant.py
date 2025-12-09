@@ -3,7 +3,7 @@ Tenant context middleware for request isolation
 """
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
-from jose import jwt, JWTError
+import jwt
 from app.core.auth import SECRET_KEY, ALGORITHM
 
 
@@ -41,7 +41,7 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
             request.state.user_id = payload.get("sub")
             request.state.user_role = payload.get("role")
             
-        except JWTError:
+        except jwt.InvalidTokenError:
             # Invalid token - let auth dependencies handle it
             pass
         
